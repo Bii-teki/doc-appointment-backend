@@ -38,7 +38,10 @@ class DoctorAPI1(Resource):
                 "phone_number": doctor.phone_number,
                 "username": doctor.username,
                 "email": doctor.email,
-                "speciality": doctor.speciality                
+                "speciality": doctor.speciality,  
+                "description": doctor.description,
+                "profile": doctor.profile     
+
             }
             doctors.append(doct_dict)
         return make_response(jsonify(doctors), 200)
