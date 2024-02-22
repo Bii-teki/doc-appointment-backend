@@ -8,8 +8,8 @@ fake = Faker()
 
 with app.app_context():
     db.create_all()  # Create all tables
+
     def delete_data():
-        # this deletes existing db data in columns 
         print("🦸 Delete_data...")
         Doctor.query.delete()
         Patient.query.delete()
@@ -33,6 +33,8 @@ with app.app_context():
                 password=fake.password(),
                 phone_number=fake.phone_number(),
                 speciality=random.choice(specialties),
+                profile=fake.image_url(),
+                description=fake.text(max_nb_chars=300),
                 role=1  # Assuming 1 is the role for doctors
             )
             db.session.add(doctor)
@@ -62,8 +64,8 @@ with app.app_context():
                 appointment = DoctorAppointment(
                     doctor_id=doctor.id,
                     patient_id=patient.id,
-                    appointment_date=fake.date_time_between(start_date='-1y', end_date='+1y'),
-                    reason = fake.sentence()
+                    appointment_date=fake.date_time_between(start_date='now', end_date='+1y'),
+                    reason=fake.sentence()
                 )
                 db.session.add(appointment)
 

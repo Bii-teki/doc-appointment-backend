@@ -22,6 +22,8 @@ class Doctor(db.Model, SerializerMixin):
     address = db.Column(db.String(200), nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.Integer, nullable=False)
+    profile = db.Column(db.String(255)) 
+    description = db.Column(db.Text)   
 
 class Patient(db.Model, SerializerMixin):
     __tablename__ = 'patients'
