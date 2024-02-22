@@ -34,7 +34,7 @@ with app.app_context():
                 phone_number=fake.phone_number(),
                 speciality=random.choice(specialties),
                 profile=fake.image_url(),
-                description=fake.text(max_nb_chars=50),
+                description=fake.text(max_nb_chars=200),
                 role=1  # Assuming 1 is the role for doctors
             )
             db.session.add(doctor)
