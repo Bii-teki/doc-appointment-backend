@@ -58,13 +58,19 @@ with app.app_context():
         print("🦸‍♀️ Seeding Doctor Appointments...")
         doctors = Doctor.query.all()
         patients = Patient.query.all()
+        
         for doctor in doctors:
             for _ in range(10):  # Each doctor has 10 appointments
                 patient = fake.random_element(patients)
+                appointment_datetime = fake.date_time_between(start_date='now', end_date='+1y')
+                appointment_date = appointment_datetime.date()
+                appointment_time = appointment_datetime.time()
+
                 appointment = DoctorAppointment(
                     doctor_id=doctor.id,
                     patient_id=patient.id,
-                    appointment_date=fake.date_time_between(start_date='now', end_date='+1y'),
+                    appointment_date=appointment_date,
+                    appointment_time=appointment_time,
                     reason=fake.sentence()
                 )
                 db.session.add(appointment)

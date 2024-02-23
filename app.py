@@ -6,6 +6,8 @@ from faker import Faker
 import random
 from models import db, Doctor, Patient, DoctorAppointment
 from flask_cors import CORS
+from datetime import datetime
+
 
 app = Flask(__name__)
 CORS(app)
@@ -279,7 +281,9 @@ class DoctorAppointmentAPI1(Resource):
             appoint_dict = {
                 "Doctor": doct_details,
                 "patient": patient1_details,
-                "reason": appoint.reason
+                "reason": appoint.reason,
+                "appointment_date": str(appoint.appointment_date),  # Convert date to string
+                "appointment_time": str(appoint.appointment_time)   # Convert time to string
             }
             appoints.append(appoint_dict)
 
@@ -288,8 +292,42 @@ class DoctorAppointmentAPI1(Resource):
         return {'message': 'No appointments for this doctor'}, 404
 
 api.add_resource(DoctorAppointmentAPI1, '/appointments/doctor/<int:doctor_id>')
+                       
+class AppointmentApi(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('doctor_id', type=int, help='Doctor ID', required=True)
+        parser.add_argument('patient_id', type=int, help='Patient ID', required=True)
+        parser.add_argument('reason', type=str, help='Reason for appointment', required=True)
+        parser.add_argument('appointment_date', type=str, help='Appointment date (YYYY-MM-DD)', required=True)
+        parser.add_argument('appointment_time', type=str, help='Appointment time (HH:MM:SS)', required=True)
+        args = parser.parse_args()
 
+        doctor_id = args['doctor_id']
+        patient_id = args['patient_id']
+        reason = args['reason']
+        appointment_date = datetime.strptime(args['appointment_date'], '%Y-%m-%d')
+        appointment_time = datetime.strptime(args['appointment_time'], '%H:%M:%S').time()
 
+        if not Doctor.query.get(doctor_id):
+            return {'message': 'Doctor not found'}, 404
+
+        if not Patient.query.get(patient_id):
+            return {'message': 'Patient not found'}, 404
+
+        appointment = DoctorAppointment(
+            doctor_id=doctor_id,
+            patient_id=patient_id,
+            appointment_date=appointment_date,
+            appointment_time=appointment_time,
+            reason=reason
+        )
+        db.session.add(appointment)
+        db.session.commit()
+
+        return {'message': 'Appointment created successfully'}, 201
+
+api.add_resource(AppointmentApi, '/appointments')
 
 
 if __name__ == '__main__':
