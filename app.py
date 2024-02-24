@@ -1,5 +1,6 @@
-from flask import Flask, jsonify, request, make_response 
+from flask import Flask, jsonify, request, make_response
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash, generate_password_hash
 from flask_migrate import Migrate
 from flask_restful import Api, Resource, reqparse
 from faker import Faker
@@ -34,7 +35,7 @@ class DoctorAPI1(Resource):
         doctors = []
         for doctor in Doctor.query.all():
             doct_dict = {
-                # "id": doctor.id,
+                "id": doctor.id,
                 "first_name": doctor.first_name,
                 "last_name": doctor.last_name,
                 "phone_number": doctor.phone_number,
@@ -58,7 +59,7 @@ class DoctorAPI(Resource):
         doctor = Doctor.query.get(doctor_id)
         if doctor:
             doct_dict = {
-                # "id": doctor.id,
+                "id": doctor.id,
                 "first_name": doctor.first_name,
                 "last_name": doctor.last_name,
                 "phone_number": doctor.phone_number,
@@ -113,6 +114,24 @@ class DoctorAPI(Resource):
             db.session.commit()
             return {'message': 'Doctor deleted successfully'}, 200
         return {'message': 'Doctor not found'}, 404
+    
+    def patch(self, doctor_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', type=str, help='Username')
+        parser.add_argument('password', type=str, help='Password')
+        args = parser.parse_args()
+
+        doctor = Doctor.query.get(doctor_id)
+        if not doctor:
+            return {'message': 'Doctor not found'}, 404
+
+        if args['username']:
+            doctor.username = args['username']
+        if args['password']:
+            doctor.password = generate_password_hash(args['password'])
+
+        db.session.commit()
+        return {'message': 'Doctor updated successfully'}, 200
 
 api.add_resource(DoctorAPI, '/doctors', '/doctors/<int:doctor_id>')
 
@@ -252,6 +271,24 @@ class PatientApi(Resource):
             db.session.commit()
             return {'message': 'Patient updated successfully'}, 200
         return {'message': 'Patient not found'}, 404
+        
+    def patch(self, patient_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', type=str, help='Username')
+        parser.add_argument('password', type=str, help='Password')
+        args = parser.parse_args()
+
+        patient = Patient.query.get(patient_id)
+        if not patient:
+            return {'message': 'Patient not found'}, 404
+
+        if args['username']:
+            patient.username = args['username']
+        if args['password']:
+            patient.password = generate_password_hash(args['password'])
+
+        db.session.commit()
+        return {'message': 'Patient updated successfully'}, 200
 
 api.add_resource(PatientApi, '/patients', '/patients/<int:patient_id>')
 
@@ -328,6 +365,50 @@ class AppointmentApi(Resource):
         return {'message': 'Appointment created successfully'}, 201
 
 api.add_resource(AppointmentApi, '/appointments')
+
+
+class Login(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', type=str, help='Username', required=True)
+        parser.add_argument('password', type=str, help='Password', required=True)
+        args = parser.parse_args()
+
+        username = args['username']
+        password = args['password']
+
+        # Check if the user is a doctor or a patient based on the role
+        doctor = Doctor.query.filter_by(username=username).first()
+        patient = Patient.query.filter_by(username=username).first()
+
+        if doctor:
+            if check_password_hash(doctor.password, password):
+                doct_dict = {
+                    "id": doctor.id,
+                    "first_name": doctor.first_name,
+                    "last_name": doctor.last_name,
+                    "phone_number": doctor.phone_number,
+                    "username": doctor.username,
+                    "email": doctor.email,
+                    "speciality": doctor.speciality
+                }
+                return make_response(jsonify(doct_dict), 200)
+        elif patient:
+            if check_password_hash(patient.password, password):
+                patient_dict = {
+                    "id": patient.id,
+                    "first_name": patient.first_name,
+                    "last_name": patient.last_name,
+                    "phone_number": patient.phone_number,
+                    "username": patient.username,
+                    "email": patient.email,
+                }
+                return make_response(jsonify(patient_dict), 200)
+
+        return {'message': 'Invalid credentials'}, 401
+
+
+api.add_resource(Login, '/login')
 
 
 if __name__ == '__main__':
