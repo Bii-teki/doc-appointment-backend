@@ -376,35 +376,36 @@ class Login(Resource):
         username = args['username']
         password = args['password']
 
-        # Check if the user is a doctor or a patient based on the role
-        doctor = Doctor.query.filter_by(username=username).first()
-        patient = Patient.query.filter_by(username=username).first()
+        user = None
+        is_doctor = False
 
+        # Check if the user is a doctor
+        doctor = Doctor.query.filter_by(username=username).first()
         if doctor:
-            if check_password_hash(doctor.password, password):
-                doct_dict = {
-                    "id": doctor.id,
-                    "first_name": doctor.first_name,
-                    "last_name": doctor.last_name,
-                    "phone_number": doctor.phone_number,
-                    "username": doctor.username,
-                    "email": doctor.email,
-                    "speciality": doctor.speciality
-                }
-                return make_response(jsonify({"message": "Logged in successfully", "user": doct_dict}), 200)
-        elif patient:
-            if check_password_hash(patient.password, password):
-                patient_dict = {
-                    "id": patient.id,
-                    "first_name": patient.first_name,
-                    "last_name": patient.last_name,
-                    "phone_number": patient.phone_number,
-                    "username": patient.username,
-                    "email": patient.email,
-                }
-                return make_response(jsonify({"message": "Logged in successfully", "user": patient_dict}), 200)
+            user = doctor
+            is_doctor = True
+        else:
+            # Check if the user is a patient
+            patient = Patient.query.filter_by(username=username).first()
+            if patient:
+                user = patient
+
+        if user and check_password_hash(user.password, password):
+            user_dict = {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "phone_number": user.phone_number,
+                "username": user.username,
+                "email": user.email,
+            }
+            if is_doctor:
+                user_dict["speciality"] = user.speciality
+
+            return make_response(jsonify({"message": "Logged in successfully", "user": user_dict}), 200)
 
         return {'message': 'Invalid credentials'}, 401
+
 
 
 api.add_resource(Login, '/login')
