@@ -347,8 +347,8 @@ class AppointmentApi(Resource):
             appointment_data.append({
                 'id': appointment.id,
                 'doctor_id': appointment.doctor_id,
-                'doctor_firstname': appointment.first_name,
-                'doctor_lastname': appointment.last_name,
+                'doctor_firstname': doctor.first_name,
+                'doctor_lastname': doctor.last_name,
                 'doctor_email': doctor.email,
                 'doctor_phone': doctor.phone_number,
                 'patient_id': appointment.patient_id,
