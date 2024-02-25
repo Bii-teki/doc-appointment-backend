@@ -331,6 +331,26 @@ class DoctorAppointmentAPI1(Resource):
 api.add_resource(DoctorAppointmentAPI1, '/appointments/doctor/<int:doctor_id>')
                        
 class AppointmentApi(Resource):
+    def get(self, patient_id=None):
+        if patient_id:
+            appointments = DoctorAppointment.query.filter_by(patient_id=patient_id).all()
+            if not appointments:
+                return {'message': 'No appointments found for this patient'}, 404
+        else:
+            appointments = DoctorAppointment.query.all()
+
+        appointment_data = []
+        for appointment in appointments:
+            appointment_data.append({
+                'id': appointment.id,
+                'doctor_id': appointment.doctor_id,
+                'patient_id': appointment.patient_id,
+                'reason': appointment.reason,
+                'appointment_date': appointment.appointment_date.strftime('%Y-%m-%d'),
+                'appointment_time': appointment.appointment_time.strftime('%H:%M:%S')
+            })
+        return {'appointments': appointment_data}, 200
+
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('doctor_id', type=int, help='Doctor ID', required=True)
@@ -364,7 +384,42 @@ class AppointmentApi(Resource):
 
         return {'message': 'Appointment created successfully'}, 201
 
-api.add_resource(AppointmentApi, '/appointments')
+    def patch(self, appointment_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('doctor_id', type=int, help='Doctor ID')
+        parser.add_argument('patient_id', type=int, help='Patient ID')
+        parser.add_argument('reason', type=str, help='Reason for appointment')
+        parser.add_argument('appointment_date', type=str, help='Appointment date (YYYY-MM-DD)')
+        parser.add_argument('appointment_time', type=str, help='Appointment time (HH:MM:SS)')
+        args = parser.parse_args()
+
+        appointment = DoctorAppointment.query.get(appointment_id)
+        if not appointment:
+            return {'message': 'Appointment not found'}, 404
+
+        if 'doctor_id' in args:
+            appointment.doctor_id = args['doctor_id']
+        if 'patient_id' in args:
+            appointment.patient_id = args['patient_id']
+        if 'reason' in args:
+            appointment.reason = args['reason']
+        if 'appointment_date' in args:
+            appointment.appointment_date = datetime.strptime(args['appointment_date'], '%Y-%m-%d')
+        if 'appointment_time' in args:
+            appointment.appointment_time = datetime.strptime(args['appointment_time'], '%H:%M:%S').time()
+
+        db.session.commit()
+        return {'message': 'Appointment updated successfully'}, 200
+
+    def delete(self, appointment_id):
+        appointment = DoctorAppointment.query.get(appointment_id)
+        if not appointment:
+            return {'message': 'Appointment not found'}, 404
+        db.session.delete(appointment)
+        db.session.commit()
+        return {'message': 'Appointment deleted successfully'}, 200
+
+api.add_resource(AppointmentApi, '/appointments', '/appointments/<int:patient_id>', '/appointments/<int:appointment_id>')
 
 class Login(Resource):
     def post(self):
