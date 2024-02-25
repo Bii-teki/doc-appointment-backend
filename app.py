@@ -338,12 +338,18 @@ class AppointmentApi(Resource):
                 return {'message': 'No appointments found for this patient'}, 404
         else:
             appointments = DoctorAppointment.query.all()
-
+    
         appointment_data = []
         for appointment in appointments:
+            doctor = Doctor.query.get(appointment.doctor_id)
+            if not doctor:
+                continue  # Skip this appointment if the doctor is not found
+    
             appointment_data.append({
                 'id': appointment.id,
                 'doctor_id': appointment.doctor_id,
+                'doctor_name': f'{doctor.first_name} {doctor.last_name}',
+                'doctor_speciality': doctor.speciality,
                 'patient_id': appointment.patient_id,
                 'reason': appointment.reason,
                 'appointment_date': appointment.appointment_date.strftime('%Y-%m-%d'),
