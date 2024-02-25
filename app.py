@@ -348,7 +348,7 @@ class AppointmentApi(Resource):
                 'id': appointment.id,
                 'doctor_id': appointment.doctor_id,
                 'doctor_email': doctor.email,
-                'doctor_phone': doctor.phone,
+                'doctor_phone': doctor.phone_number,
                 'patient_id': appointment.patient_id,
                 'reason': appointment.reason,
                 'appointment_date': appointment.appointment_date.strftime('%Y-%m-%d'),
