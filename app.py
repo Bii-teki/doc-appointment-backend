@@ -371,7 +371,8 @@ class AppointmentApi(Resource):
         patient_id = args['patient_id']
         reason = args['reason']
         appointment_date = datetime.strptime(args['appointment_date'], '%Y-%m-%d')
-        appointment_time = datetime.strptime(args['appointment_time'], '%H:%M:%S').time()
+        appointment_time = datetime.strptime(args['appointment_time'], '%I:%M:%S %p').time()
+
 
         if not Doctor.query.get(doctor_id):
             return {'message': 'Doctor not found'}, 404
