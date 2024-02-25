@@ -366,7 +366,6 @@ class AppointmentApi(Resource):
 
 api.add_resource(AppointmentApi, '/appointments')
 
-
 class Login(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -392,7 +391,7 @@ class Login(Resource):
                     "email": doctor.email,
                     "speciality": doctor.speciality
                 }
-                return make_response(jsonify(doct_dict), 200)
+                return make_response(jsonify({"message": "Logged in successfully", "user": doct_dict}), 200)
         elif patient:
             if check_password_hash(patient.password, password):
                 patient_dict = {
@@ -403,7 +402,7 @@ class Login(Resource):
                     "username": patient.username,
                     "email": patient.email,
                 }
-                return make_response(jsonify(patient_dict), 200)
+                return make_response(jsonify({"message": "Logged in successfully", "user": patient_dict}), 200)
 
         return {'message': 'Invalid credentials'}, 401
 
