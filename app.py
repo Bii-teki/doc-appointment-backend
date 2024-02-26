@@ -211,7 +211,20 @@ api.add_resource(DoctorAppointmentAPI2, '/appointments/patient/<int:patient_id>'
 
 
 class PatientApi(Resource):
-    def get(self):
+    def get(self, patient_id=None):
+        if patient_id:
+            patient = Patient.query.get(patient_id)
+            if not patient:
+                return {'message': 'Patient not found'}, 404
+            return {
+                'first_name': patient.first_name,
+                'last_name': patient.last_name,
+                'username': patient.username,
+                'phone_number': patient.phone_number,
+                'email': patient.email,
+                'address': patient.address
+            }, 200
+
         patients = []
         for patient in Patient.query.all():
             dic_patient ={
@@ -222,6 +235,7 @@ class PatientApi(Resource):
                 "email": patient.email
             }
             patients.append(dic_patient)
+
         if patients:
             return make_response(jsonify(patients), 200)
         return {'message': 'No patients'}, 404
@@ -257,21 +271,6 @@ class PatientApi(Resource):
             return {'message': 'Patient updated successfully'}, 200
         return {'message': 'Patient not found'}, 404
 
-    def patch(self, patient_id):
-        data = request.get_json()
-        patient = Patient.query.get(patient_id)
-        if patient:
-            patient.first_name = data.get('first_name', patient.first_name)
-            patient.last_name = data.get('last_name', patient.last_name)
-            patient.username = data.get('username', patient.username)
-            patient.phone_number = data.get('phone_number', patient.phone_number)
-            patient.email = data.get('email', patient.email)
-            patient.address = data.get('address', patient.address)
-            patient.password = data.get('password', patient.password)
-            db.session.commit()
-            return {'message': 'Patient updated successfully'}, 200
-        return {'message': 'Patient not found'}, 404
-        
     def patch(self, patient_id):
         parser = reqparse.RequestParser()
         parser.add_argument('username', type=str, help='Username')
